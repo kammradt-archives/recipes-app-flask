@@ -54,7 +54,7 @@ def token_required(f):
     return decorated
 
 
-@app.route('/user', methods=['GET'])
+@app.route('/api/user', methods=['GET'])
 @token_required
 def get_all_users(current_user):
     if not current_user.is_admin:
@@ -70,7 +70,7 @@ def get_all_users(current_user):
     return jsonify({'users': response})
 
 
-@app.route('/user/<public_id>', methods=['GET'])
+@app.route('/api/user/<public_id>', methods=['GET'])
 @token_required
 def get_user(current_user, public_id):
     user = User.query.filter_by(public_id=public_id).first()
@@ -83,7 +83,7 @@ def get_user(current_user, public_id):
     return jsonify({'user': user_data})
 
 
-@app.route('/user', methods=['POST'])
+@app.route('/api/user', methods=['POST'])
 def create_user():
     post_data = request.get_json()
 
@@ -97,7 +97,7 @@ def create_user():
     return jsonify({'message': 'New user created!'})
 
 
-@app.route('/user/<public_id>', methods=['PUT'])
+@app.route('/api/user/<public_id>', methods=['PUT'])
 @token_required
 def update_user(current_user, public_id):
     user = User.query.filter_by(public_id=public_id).first()
@@ -112,7 +112,7 @@ def update_user(current_user, public_id):
     return jsonify({'message': 'User updated!'})
 
 
-@app.route('/user/<public_id>', methods=['DELETE'])
+@app.route('/api/user/<public_id>', methods=['DELETE'])
 @token_required
 def delete_user(current_user, public_id):
     if not current_user.is_admin:
@@ -128,7 +128,7 @@ def delete_user(current_user, public_id):
     return jsonify({'message': 'User deleted!'})
 
 
-@app.route('/recipe', methods=['GET'])
+@app.route('/api/recipe', methods=['GET'])
 @token_required
 def get_all_recipes(current_user):
     recipes = Recipe.query.filter_by(user_id=current_user.id).all()
@@ -146,7 +146,7 @@ def get_all_recipes(current_user):
     return jsonify({'recipes': response})
 
 
-@app.route('/recipe/<recipe_id>', methods=['GET'])
+@app.route('/api/recipe/<recipe_id>', methods=['GET'])
 @token_required
 def get_recipe(current_user, recipe_id):
     recipe = Recipe.query.filter_by(id=recipe_id, user_id=current_user.id).first()
@@ -167,7 +167,7 @@ def get_recipe(current_user, recipe_id):
     return jsonify({'recipe': recipe_data})
 
 
-@app.route('/recipe/', methods=['POST'])
+@app.route('/api/recipe/', methods=['POST'])
 @token_required
 def create_recipe(current_user):
     data = request.get_json()
@@ -187,7 +187,7 @@ def create_recipe(current_user):
     return jsonify({'message': 'New recipe added!'})
 
 
-@app.route('/recipe/<recipe_id>', methods=['PUT'])
+@app.route('/api/recipe/<recipe_id>', methods=['PUT'])
 @token_required
 def update_recipe(current_user, recipe_id):
     recipe = Recipe.query.filter_by(id=recipe_id, user_id=current_user.id).first()
@@ -207,7 +207,7 @@ def update_recipe(current_user, recipe_id):
     return jsonify({'message': 'Recipe updated!'})
 
 
-@app.route('/recipe/<recipe_id>', methods=['DELETE'])
+@app.route('/api/recipe/<recipe_id>', methods=['DELETE'])
 @token_required
 def delete_recipe(current_user, recipe_id):
     recipe = Recipe.query.filter_by(id=recipe_id, user_id=current_user.id).first()
@@ -221,7 +221,7 @@ def delete_recipe(current_user, recipe_id):
     return jsonify({'message': 'Recipe deleted!'})
 
 
-@app.route('/login')
+@app.route('/api/login')
 def login():
     auth_data = request.authorization
 
