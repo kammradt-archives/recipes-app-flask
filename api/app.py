@@ -5,8 +5,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 import datetime
 from functools import wraps
+from flask_cors import CORS
+
 
 app = Flask(__name__)
+CORS(app)
 db = SQLAlchemy(app)
 
 app.config['SECRET_KEY'] = 'Qw3yU1a8Rn_qxBENFoCZzEDq-qWf1lRzBCcUQ3ZnJzk'
@@ -212,7 +215,7 @@ def update_recipe(current_user, recipe_id):
 def delete_recipe(current_user, recipe_id):
     recipe = Recipe.query.filter_by(id=recipe_id, user_id=current_user.id).first()
 
-    if not recipe:
+    if not recipe:      
         return jsonify({'message': 'No recipe found!'})
 
     db.session.delete(recipe)

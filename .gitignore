@@ -1,5 +1,5 @@
 .idea/
 .vscode/
-recipes_venv/
+venv/
 api/media/
 *.pyc
