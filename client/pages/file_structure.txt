@@ -1,0 +1,7 @@
+The file structure in this folder will generate the following routes:
+
+/ → handled by pages/index.vue
+/recipes/add → handled by pages/recipes/add.vue
+/recipes/ → handled by pages/recipes/index.vue
+/recipes/{id}/ → handled by pages/recipes/_id/index.vue
+/recipes/{id}/edit → handled by pages/recipes/_id/edit.vue
