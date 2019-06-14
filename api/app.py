@@ -28,7 +28,7 @@ class Recipe(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))
     ingredients = db.Column(db.String(400))
-    picture = db.Column(db.String(200))
+    picture = db.Column(db.String(600))
     difficulty = db.Column(db.String(20))
     preparation_time = db.Column(db.Integer, default=5)
     preparation_guide = db.Column(db.String(600))

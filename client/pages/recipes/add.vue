@@ -4,7 +4,11 @@
     <v-flex pa-1 text-xs-center display-3 v-text="recipe.name" />
     <v-layout justify-space-around row wrap fill-height>
       <v-flex text-xs-center xs12 md6 pa-1 pt-5>
-        <img v-if="preview" style="width: 400px;" :src="preview" />
+        <img
+          v-if="recipe.picture"
+          style="width: 400px;"
+          :src="recipe.picture"
+        />
       </v-flex>
 
       <v-flex xs12 md6 pa-1 pt-5>
@@ -27,8 +31,12 @@
             required
           />
 
-          <span pb-3 body-1 v-text="'Food picture'" />
-          <input label="Food picture" type="file" @change="onFileChange" />
+          <v-text-field
+            v-model="recipe.picture"
+            type="text"
+            label="Picture url"
+            required
+          />
 
           <v-select
             v-model="recipe.difficulty"
@@ -66,7 +74,6 @@
 
 <script>
 import MainToolbar from '~/components/MainToolbar'
-
 export default {
   components: {
     MainToolbar
@@ -86,7 +93,6 @@ export default {
         preparation_time: 5,
         preparation_guide: ''
       },
-      preview: '',
       rules: {
         recipeNameRule: [
           v => v.length >= 5 || 'Minimum length is 5 characters',
@@ -108,31 +114,19 @@ export default {
     }
   },
   methods: {
-    onFileChange(e) {
-      const files = e.target.files || e.dataTransfer.files
-      if (!files.length) {
-        return
-      }
-      this.recipe.picture = files[0]
-      this.createImage(files[0])
-    },
-    createImage(file) {
-      const reader = new FileReader()
-      const vm = this
-      reader.onload = e => {
-        vm.preview = e.target.result
-      }
-      reader.readAsDataURL(file)
-    },
     async submitRecipe() {
-      const form = new FormData()
-      for (const data in this.recipe) {
-        form.append(data, this.recipe[data])
-      }
       try {
-        const headers = { Authorization: `JWT ${this.$store.getters.token}` }
+        const config = {
+          headers: {
+            'x-access-token': this.$store.getters.token
+          }
+        }
         // eslint-disable-next-line no-unused-vars
-        const response = await this.$axios.$post('/recipes/', form, { headers })
+        const response = await this.$axios.$post(
+          '/recipe/',
+          this.recipe,
+          config
+        )
         this.$router.push('/recipes/')
       } catch (e) {
         // eslint-disable-next-line no-console
