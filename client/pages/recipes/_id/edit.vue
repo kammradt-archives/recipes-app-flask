@@ -4,8 +4,11 @@
     <v-flex pa-1 text-xs-center display-3 v-text="recipe.name" />
     <v-layout justify-space-around row wrap fill-height>
       <v-flex text-xs-center xs12 md6 pa-1 pt-5>
-        <img v-if="!preview" style="width: 400px;" :src="recipe.picture" />
-        <img else style="width: 400px;" :src="preview" />
+        <img
+          v-if="recipe.picture"
+          style="width: 400px;"
+          :src="recipe.picture"
+        />
       </v-flex>
       <v-flex xs12 md6 pa-1 pt-5>
         <v-form @submit.prevent="submitRecipe">
@@ -27,8 +30,12 @@
             required
           />
 
-          <span pb-3 body-1 v-text="'Food picture'" />
-          <input label="Food picture" type="file" @change="onFileChange" />
+          <v-text-field
+            v-model="recipe.picture"
+            type="text"
+            label="Picture url"
+            required
+          />
 
           <v-select
             v-model="recipe.difficulty"
@@ -86,7 +93,6 @@ export default {
         preparation_time: 5,
         preparation_guide: ''
       },
-      preview: '',
       rules: {
         recipeNameRule: [
           v => v.length >= 5 || 'Minimum length is 5 characters',
@@ -108,51 +114,31 @@ export default {
     }
   },
   async asyncData({ $axios, params, store }) {
-    const headers = { Authorization: `JWT ${store.getters.token}` }
+    const config = {
+      headers: {
+        'x-access-token': store.getters.token
+      }
+    }
     try {
-      const recipe = await $axios.$get(`/recipes/${params.id}`, { headers })
+      const response = await $axios.$get(`/recipe/${params.id}`, config)
+      const recipe = response.recipe
       return { recipe }
     } catch (e) {
       return { recipe: [] }
     }
   },
   methods: {
-    onFileChange(e) {
-      const files = e.target.files || e.dataTransfer.files
-      if (!files.length) {
-        return
-      }
-      this.recipe.picture = files[0]
-      this.createImage(files[0])
-    },
-    createImage(file) {
-      const reader = new FileReader()
-      const vm = this
-      reader.onload = e => {
-        vm.preview = e.target.result
-      }
-      reader.readAsDataURL(file)
-    },
     async submitRecipe() {
-      const editedRecipe = this.recipe
-      if (editedRecipe.picture.indexOf('http://') !== -1) {
-        delete editedRecipe.picture
-      }
       const config = {
         headers: {
-          'content-type': 'multipart/form-data',
-          Authorization: `JWT ${this.$store.getters.token}`
+          'x-access-token': this.$store.getters.token
         }
-      }
-      const formData = new FormData()
-      for (const data in editedRecipe) {
-        formData.append(data, editedRecipe[data])
       }
       try {
         // eslint-disable-next-line no-unused-vars
-        const response = await this.$axios.$patch(
-          `/recipes/${editedRecipe.id}/`,
-          formData,
+        const response = await this.$axios.$put(
+          `/recipe/${this.recipe.id}`,
+          this.recipe,
           config
         )
         this.$router.push('/recipes/')
