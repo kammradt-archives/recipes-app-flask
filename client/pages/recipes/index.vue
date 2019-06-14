@@ -46,13 +46,14 @@ export default {
   methods: {
     async deleteRecipe(RecipeId) {
       try {
-        const headers = {
-          'x-access-token': this.$store.getters.token
+        const config = {
+          headers: {
+            'x-access-token': this.$store.getters.token
+          }
         }
-        await this.$axios.$delete(`/recipes/${RecipeId}/`, { headers })
-
-        const newRecipes = await this.$axios.$get('/recipes/', { headers })
-        this.recipes = newRecipes
+        await this.$axios.$delete(`/recipe/${RecipeId}`, config)
+        const newRecipes = await this.$axios.$get('/recipe', config)
+        this.recipes = newRecipes.recipes
       } catch (e) {
         // eslint-disable-next-line no-console
         console.log(e)
