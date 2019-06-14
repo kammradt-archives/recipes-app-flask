@@ -15,9 +15,6 @@
         <p class="mt-3 font-weight-light headline">
           Recipes for the meals we love ❤️
         </p>
-        <v-alert outline :value="arePasswordsDifferent" type="info">
-          Verify your password
-        </v-alert>
 
         <v-form class="pt-3">
           <v-text-field
