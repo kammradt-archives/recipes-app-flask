@@ -31,8 +31,13 @@ export default {
   },
   async asyncData({ $axios, params, store }) {
     try {
-      const headers = { Authorization: `JWT ${store.getters.token}` }
-      const recipes = await $axios.$get(`/recipes/`, { headers })
+      const config = {
+        headers: {
+          'x-access-token': store.getters.token
+        }
+      }
+      const response = await $axios.$get(`/recipe`, config)
+      const recipes = response.recipes
       return { recipes }
     } catch (e) {
       return { recipes: [] }
@@ -41,7 +46,9 @@ export default {
   methods: {
     async deleteRecipe(RecipeId) {
       try {
-        const headers = { Authorization: `JWT ${this.$store.getters.token}` }
+        const headers = {
+          'x-access-token': this.$store.getters.token
+        }
         await this.$axios.$delete(`/recipes/${RecipeId}/`, { headers })
 
         const newRecipes = await this.$axios.$get('/recipes/', { headers })
