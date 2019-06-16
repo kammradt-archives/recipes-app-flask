@@ -7,7 +7,7 @@
 - [ ] Learn how to create tests
 
 ### Client
-- [x ]  Add name of chef to each recipe but only when showing on public recipes so we can show to other users
+- [ ]  Add name of chef to each recipe but only when showing on public recipes so we can show to other users
 - [ ] Better image border
 - [ ] Upload images to server
 - [ ] Create a personal user page 
