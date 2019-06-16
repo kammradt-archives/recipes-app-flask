@@ -56,6 +56,12 @@
           </label>
           <v-slider v-model="recipe.preparation_time" max="600" />
 
+          <v-switch
+            v-model="recipe.is_public"
+            label="Public recipe?"
+            color="primary"
+          />
+
           <v-textarea
             v-model="recipe.preparation_guide"
             label="Preparation guide"
@@ -91,7 +97,8 @@ export default {
         ingredients: '',
         difficulty: '',
         preparation_time: 5,
-        preparation_guide: ''
+        preparation_guide: '',
+        is_public: false
       },
       rules: {
         recipeNameRule: [

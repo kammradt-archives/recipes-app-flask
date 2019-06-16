@@ -1,9 +1,14 @@
 <template>
   <v-app>
-    <MainToolbar />
+    <MainToolbar @changeRecipes="changeRecipes" />
     <v-layout align-start justify-start row wrap>
       <template v-for="recipe in recipes">
-        <RecipeCard :key="recipe.id" :on-delete="deleteRecipe" :recipe="recipe">
+        <RecipeCard
+          :key="recipe.id"
+          :is-public="showingPublic"
+          :on-delete="deleteRecipe"
+          :recipe="recipe"
+        >
         </RecipeCard>
       </template>
     </v-layout>
@@ -26,7 +31,8 @@ export default {
   },
   data() {
     return {
-      recipes: []
+      recipes: [],
+      showingPublic: null
     }
   },
   async asyncData({ $axios, params, store }) {
@@ -47,9 +53,7 @@ export default {
     async deleteRecipe(RecipeId) {
       try {
         const config = {
-          headers: {
-            'x-access-token': this.$store.getters.token
-          }
+          headers: { 'x-access-token': this.$store.getters.token }
         }
         await this.$axios.$delete(`/recipe/${RecipeId}`, config)
         const newRecipes = await this.$axios.$get('/recipe', config)
@@ -57,6 +61,20 @@ export default {
       } catch (e) {
         // eslint-disable-next-line no-console
         console.log(e)
+      }
+    },
+    async changeRecipes(showPublic) {
+      if (showPublic) {
+        this.showingPublic = true
+        const publicRecipes = await this.$axios.$get('/recipes')
+        this.recipes = publicRecipes.recipes
+      } else {
+        this.showingPublic = false
+        const config = {
+          headers: { 'x-access-token': this.$store.getters.token }
+        }
+        const newRecipes = await this.$axios.$get('/recipe', config)
+        this.recipes = newRecipes.recipes
       }
     }
   }

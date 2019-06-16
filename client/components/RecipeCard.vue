@@ -12,22 +12,26 @@
       </v-card-text>
 
       <v-card-actions>
-        <v-spacer></v-spacer>
-        <nuxt-link :to="`/recipes/${recipe.id}/`" class="pr-2">
-          <v-btn small color="success" v-text="'View'" />
+        <v-spacer />
+        <nuxt-link class="pr-2" :to="`/recipes/${recipe.id}/`">
+          <v-btn small :large="isPublic" color="success" v-text="'View'" />
         </nuxt-link>
 
-        <nuxt-link :to="`/recipes/${recipe.id}/edit/`" class="pr-2">
+        <nuxt-link
+          v-show="!isPublic"
+          :to="`/recipes/${recipe.id}/edit/`"
+          class="pr-2"
+        >
           <v-btn small color="info" v-text="'Edit'" />
         </nuxt-link>
 
         <v-btn
+          v-show="!isPublic"
           small
           color="primary"
           @click="onDelete(recipe.id)"
           v-text="'Delete'"
-        >
-        </v-btn>
+        />
       </v-card-actions>
     </v-card>
   </v-flex>
@@ -35,7 +39,7 @@
 
 <script>
 export default {
-  props: ['recipe', 'onDelete']
+  props: ['recipe', 'onDelete', 'isPublic']
 }
 </script>
 

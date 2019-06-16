@@ -32,6 +32,7 @@ class Recipe(db.Model):
     difficulty = db.Column(db.String(20))
     preparation_time = db.Column(db.Integer, default=5)
     preparation_guide = db.Column(db.String(600))
+    is_public = db.Column(db.Boolean, default=False)
 
     user_id = db.Column(db.Integer)
 
@@ -143,7 +144,26 @@ def get_all_recipes(current_user):
         'picture': recipe.picture,
         'difficulty': recipe.difficulty,
         'preparation_time': recipe.preparation_time,
-        'preparation_guide': recipe.preparation_guide
+        'preparation_guide': recipe.preparation_guide,
+        'is_public': recipe.is_public
+    } for recipe in recipes]
+
+    return jsonify({'recipes': response})
+
+
+@app.route('/api/recipes', methods=['GET'])
+def get_all_public_recipes():
+    recipes = Recipe.query.filter_by(is_public=True).all()
+
+    response = [{
+        'id': recipe.id,
+        'name': recipe.name,
+        'ingredients': recipe.ingredients,
+        'picture': recipe.picture,
+        'difficulty': recipe.difficulty,
+        'preparation_time': recipe.preparation_time,
+        'preparation_guide': recipe.preparation_guide,
+        'is_public': recipe.is_public
     } for recipe in recipes]
 
     return jsonify({'recipes': response})
@@ -152,7 +172,7 @@ def get_all_recipes(current_user):
 @app.route('/api/recipe/<recipe_id>', methods=['GET'])
 @token_required
 def get_recipe(current_user, recipe_id):
-    recipe = Recipe.query.filter_by(id=recipe_id, user_id=current_user.id).first()
+    recipe = Recipe.query.filter_by(id=recipe_id).first()
 
     if not recipe:
         return jsonify({'message': 'No recipe found!'})
@@ -164,10 +184,16 @@ def get_recipe(current_user, recipe_id):
         'picture': recipe.picture,
         'difficulty': recipe.difficulty,
         'preparation_time': recipe.preparation_time,
-        'preparation_guide': recipe.preparation_guide
+        'preparation_guide': recipe.preparation_guide,
+        'is_public': recipe.is_public
     }
 
-    return jsonify({'recipe': recipe_data})
+    if recipe.is_public:
+        return jsonify({'recipe': recipe_data})
+    elif recipe.user_id == current_user.id:
+        return jsonify({'recipe': recipe_data})
+    else:
+        return jsonify({'message': 'No recipe found!'})
 
 
 @app.route('/api/recipe/', methods=['POST'])
@@ -182,6 +208,7 @@ def create_recipe(current_user):
         difficulty=data['difficulty'],
         preparation_time=data['preparation_time'],
         preparation_guide=data['preparation_guide'],
+        is_public=data['is_public'],
         user_id=current_user.id
     )
     db.session.add(new_recipe)
@@ -205,6 +232,7 @@ def update_recipe(current_user, recipe_id):
     recipe.difficulty = put_data['difficulty']
     recipe.preparation_time = put_data['preparation_time']
     recipe.preparation_guide = put_data['preparation_guide']
+    recipe.is_public = put_data['is_public']
     db.session.commit()
 
     return jsonify({'message': 'Recipe updated!'})

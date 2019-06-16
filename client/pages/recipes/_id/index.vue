@@ -29,7 +29,15 @@
           <label
             v-text="`Preparation time: ${recipe.preparation_time} minutes`"
           />
+
           <v-slider v-model="recipe.preparation_time" max="600" readonly />
+
+          <v-switch
+            v-model="recipe.is_public"
+            label="Public recipe?"
+            color="primary"
+            readonly
+          />
 
           <v-textarea
             v-model="recipe.preparation_guide"
@@ -64,7 +72,8 @@ export default {
         ingredients: '',
         difficulty: '',
         preparation_time: '',
-        preparation_guide: ''
+        preparation_guide: '',
+        is_public: false
       }
     }
   },
