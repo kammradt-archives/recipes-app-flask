@@ -18,7 +18,10 @@
         />
       </v-btn>
       <nuxt-link to="/recipes/add">
-        <v-btn outline>Add</v-btn>
+        <v-btn outline>
+          Add
+          <v-icon right>add</v-icon>
+        </v-btn>
       </nuxt-link>
     </v-toolbar>
     <br />
