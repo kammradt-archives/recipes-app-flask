@@ -1,7 +1,12 @@
 <template>
   <div>
     <v-toolbar dark class="primary">
-      <v-toolbar-title>Receitinhas top</v-toolbar-title>
+      <nuxt-link to="/recipes">
+        <v-btn outline block>
+          Receitinhas top
+          <v-icon right>home</v-icon>
+        </v-btn>
+      </nuxt-link>
       <v-spacer />
       <v-btn flat small>
         <v-switch
