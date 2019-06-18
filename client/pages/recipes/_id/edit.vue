@@ -12,7 +12,7 @@
         />
       </v-flex>
       <v-flex xs12 md6 pa-1 pt-5>
-        <v-form @submit.prevent="submitRecipe">
+        <v-form ref="editForm" @submit.prevent="submitRecipe">
           <v-text-field
             v-model="recipe.name"
             :counter="120"
@@ -136,22 +136,24 @@ export default {
   },
   methods: {
     async submitRecipe() {
-      const config = {
-        headers: {
-          'x-access-token': this.$store.getters.token
+      if (this.$refs.editForm.validate()) {
+        const config = {
+          headers: {
+            'x-access-token': this.$store.getters.token
+          }
         }
-      }
-      try {
-        // eslint-disable-next-line no-unused-vars
-        const response = await this.$axios.$put(
-          `/recipe/${this.recipe.id}`,
-          this.recipe,
-          config
-        )
-        this.$router.push('/recipes/')
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.log(e)
+        try {
+          // eslint-disable-next-line no-unused-vars
+          const response = await this.$axios.$put(
+            `/recipe/${this.recipe.id}`,
+            this.recipe,
+            config
+          )
+          this.$router.push('/recipes/')
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.log(e)
+        }
       }
     }
   }
