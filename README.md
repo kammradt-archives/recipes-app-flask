@@ -12,6 +12,6 @@
 - [ ] Upload images to server
 - [ ] Create a personal user page 
 - [ ] Create a edit page to user page
-- [ ] Transitions
+- [x] Transitions
 - [ ] Themes
 - [ ] Multi-language
