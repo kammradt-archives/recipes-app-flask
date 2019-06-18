@@ -8,6 +8,7 @@
           v-if="recipe.picture"
           style="width: 400px;"
           :src="recipe.picture"
+          class="elevation-10"
         />
       </v-flex>
 
