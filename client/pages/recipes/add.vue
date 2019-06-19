@@ -132,7 +132,7 @@ export default {
           }
           // eslint-disable-next-line no-unused-vars
           const response = await this.$axios.$post(
-            '/recipe/',
+            '/recipe',
             this.recipe,
             config
           )

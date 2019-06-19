@@ -5,6 +5,9 @@
 ### Server
 - [ ] Add name of each chef to public recipes OR create a specific endpoint for that
 - [ ] Learn how to create tests
+- [x] Create class based views
+- [ ] Organize project folder to split app.py
+- [ ] Create different blueprints for each part of api
 
 ### Client
 - [ ] Add name of chef to each recipe but only when showing on public recipes so we can show to other users

@@ -1,12 +1,12 @@
 import uuid
 from flask import Flask, request, jsonify, make_response
+from flask.views import MethodView
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 import datetime
 from functools import wraps
 from flask_cors import CORS
-
 
 app = Flask(__name__)
 CORS(app)
@@ -58,33 +58,160 @@ def token_required(f):
     return decorated
 
 
-@app.route('/api/user', methods=['GET'])
-@token_required
-def get_all_users(current_user):
-    if not current_user.is_admin:
-        return jsonify({'message': 'Cannot perform this call!'})
+class RecipeView(MethodView):
 
-    users = User.query.all()
-    response = [{
-        'public_id': user.public_id,
-        'username': user.username,
-        'is_admin': user.is_admin
-    } for user in users]
+    decorators = [token_required]
 
-    return jsonify({'users': response})
+    def get(self, current_user, recipe_id):
+        if recipe_id is None:
+            recipes = Recipe.query.filter_by(user_id=current_user.id).all()
+
+            response = [{
+                'id': recipe.id,
+                'name': recipe.name,
+                'ingredients': recipe.ingredients,
+                'picture': recipe.picture,
+                'difficulty': recipe.difficulty,
+                'preparation_time': recipe.preparation_time,
+                'preparation_guide': recipe.preparation_guide,
+                'is_public': recipe.is_public
+            } for recipe in recipes]
+
+            return jsonify({'recipes': response})
+        else:
+            recipe = Recipe.query.filter_by(id=recipe_id).first()
+
+            if not recipe:
+                return jsonify({'message': 'No recipe found!'})
+
+            recipe_data = {
+                'id': recipe.id,
+                'name': recipe.name,
+                'ingredients': recipe.ingredients,
+                'picture': recipe.picture,
+                'difficulty': recipe.difficulty,
+                'preparation_time': recipe.preparation_time,
+                'preparation_guide': recipe.preparation_guide,
+                'is_public': recipe.is_public
+            }
+
+            if recipe.is_public:
+                return jsonify({'recipe': recipe_data})
+            elif recipe.user_id == current_user.id:
+                return jsonify({'recipe': recipe_data})
+            else:
+                return jsonify({'message': 'No recipe found!'})
+
+    def post(self, current_user):
+        data = request.get_json()
+
+        new_recipe = Recipe(
+            name=data['name'],
+            ingredients=data['ingredients'],
+            picture=data['picture'],
+            difficulty=data['difficulty'],
+            preparation_time=data['preparation_time'],
+            preparation_guide=data['preparation_guide'],
+            is_public=data['is_public'],
+            user_id=current_user.id
+        )
+        db.session.add(new_recipe)
+        db.session.commit()
+
+        return jsonify({'message': 'New recipe added!'})
+
+    def put(self, current_user, recipe_id):
+        recipe = Recipe.query.filter_by(id=recipe_id, user_id=current_user.id).first()
+
+        if not recipe:
+            return jsonify({'message': 'No recipe found!'})
+
+        put_data = request.get_json()
+        recipe.name = put_data['name']
+        recipe.ingredients = put_data['ingredients']
+        recipe.picture = put_data['picture']
+        recipe.difficulty = put_data['difficulty']
+        recipe.preparation_time = put_data['preparation_time']
+        recipe.preparation_guide = put_data['preparation_guide']
+        recipe.is_public = put_data['is_public']
+        db.session.commit()
+
+        return jsonify({'message': 'Recipe updated!'})
+
+    def delete(self, current_user, recipe_id):
+        recipe = Recipe.query.filter_by(id=recipe_id, user_id=current_user.id).first()
+
+        if not recipe:
+            return jsonify({'message': 'No recipe found!'})
+
+        db.session.delete(recipe)
+        db.session.commit()
+
+        return jsonify({'message': 'Recipe deleted!'})
 
 
-@app.route('/api/user/<public_id>', methods=['GET'])
-@token_required
-def get_user(current_user, public_id):
-    user = User.query.filter_by(public_id=public_id).first()
+recipe_view = RecipeView.as_view('recipe_api')
+app.add_url_rule('/api/recipe', defaults={'recipe_id': None}, view_func=recipe_view, methods=['GET', ])
+app.add_url_rule('/api/recipe', view_func=recipe_view, methods=['POST', ])
+app.add_url_rule('/api/recipe/<int:recipe_id>', view_func=recipe_view, methods=['GET', 'PUT', 'DELETE'])
 
-    if not user:
-        return jsonify({'message': 'No user found!'})
 
-    user_data = {'public_id': user.public_id, 'username': user.username, 'is_admin': user.is_admin}
+class UserView(MethodView):
 
-    return jsonify({'user': user_data})
+    decorators = [token_required]
+
+    def get(self, current_user, public_id):
+        if public_id is None:
+            if not current_user.is_admin:
+                return jsonify({'message': 'Cannot perform this call!'})
+
+            users = User.query.all()
+            response = [{
+                'public_id': user.public_id,
+                'username': user.username,
+                'is_admin': user.is_admin
+            } for user in users]
+
+            return jsonify({'users': response})
+        else:
+            user = User.query.filter_by(public_id=public_id).first()
+
+            if not user:
+                return jsonify({'message': 'No user found!'})
+
+            user_data = {'public_id': user.public_id, 'username': user.username, 'is_admin': user.is_admin}
+
+            return jsonify({'user': user_data})
+
+    def put(self, current_user, public_id):
+        user = User.query.filter_by(public_id=public_id).first()
+        if not user:
+            return jsonify({'message': 'No user found!'})
+
+        put_data = request.get_json()
+        user.username = put_data['username']
+        user.is_admin = put_data['is_admin']
+        db.session.commit()
+
+        return jsonify({'message': 'User updated!'})
+
+    def delete(self, current_user, public_id):
+        if not current_user.is_admin:
+            return jsonify({'message': 'Cannot perform this call!'})
+
+        user = User.query.filter_by(public_id=public_id).first()
+        if not user:
+            return jsonify({'message': 'No user found!'})
+
+        db.session.delete(user)
+        db.session.commit()
+
+        return jsonify({'message': 'User deleted!'})
+
+
+user_view = UserView.as_view('user_api')
+app.add_url_rule('/api/user', defaults={'public_id': None}, view_func=user_view, methods=['GET',])
+app.add_url_rule('/api/user/<string:public_id>', view_func=user_view, methods=['GET', 'PUT', 'DELETE'])
 
 
 @app.route('/api/user', methods=['POST'])
@@ -99,56 +226,6 @@ def create_user():
     db.session.commit()
 
     return jsonify({'message': 'New user created!'})
-
-
-@app.route('/api/user/<public_id>', methods=['PUT'])
-@token_required
-def update_user(current_user, public_id):
-    user = User.query.filter_by(public_id=public_id).first()
-    if not user:
-        return jsonify({'message': 'No user found!'})
-
-    put_data = request.get_json()
-    user.username = put_data['username']
-    user.is_admin = put_data['is_admin']
-    db.session.commit()
-
-    return jsonify({'message': 'User updated!'})
-
-
-@app.route('/api/user/<public_id>', methods=['DELETE'])
-@token_required
-def delete_user(current_user, public_id):
-    if not current_user.is_admin:
-        return jsonify({'message': 'Cannot perform this call!'})
-
-    user = User.query.filter_by(public_id=public_id).first()
-    if not user:
-        return jsonify({'message': 'No user found!'})
-
-    db.session.delete(user)
-    db.session.commit()
-
-    return jsonify({'message': 'User deleted!'})
-
-
-@app.route('/api/recipe', methods=['GET'])
-@token_required
-def get_all_recipes(current_user):
-    recipes = Recipe.query.filter_by(user_id=current_user.id).all()
-
-    response = [{
-        'id': recipe.id,
-        'name': recipe.name,
-        'ingredients': recipe.ingredients,
-        'picture': recipe.picture,
-        'difficulty': recipe.difficulty,
-        'preparation_time': recipe.preparation_time,
-        'preparation_guide': recipe.preparation_guide,
-        'is_public': recipe.is_public
-    } for recipe in recipes]
-
-    return jsonify({'recipes': response})
 
 
 @app.route('/api/recipes', methods=['GET'])
@@ -167,89 +244,6 @@ def get_all_public_recipes():
     } for recipe in recipes]
 
     return jsonify({'recipes': response})
-
-
-@app.route('/api/recipe/<recipe_id>', methods=['GET'])
-@token_required
-def get_recipe(current_user, recipe_id):
-    recipe = Recipe.query.filter_by(id=recipe_id).first()
-
-    if not recipe:
-        return jsonify({'message': 'No recipe found!'})
-
-    recipe_data = {
-        'id': recipe.id,
-        'name': recipe.name,
-        'ingredients': recipe.ingredients,
-        'picture': recipe.picture,
-        'difficulty': recipe.difficulty,
-        'preparation_time': recipe.preparation_time,
-        'preparation_guide': recipe.preparation_guide,
-        'is_public': recipe.is_public
-    }
-
-    if recipe.is_public:
-        return jsonify({'recipe': recipe_data})
-    elif recipe.user_id == current_user.id:
-        return jsonify({'recipe': recipe_data})
-    else:
-        return jsonify({'message': 'No recipe found!'})
-
-
-@app.route('/api/recipe/', methods=['POST'])
-@token_required
-def create_recipe(current_user):
-    data = request.get_json()
-
-    new_recipe = Recipe(
-        name=data['name'],
-        ingredients=data['ingredients'],
-        picture=data['picture'],
-        difficulty=data['difficulty'],
-        preparation_time=data['preparation_time'],
-        preparation_guide=data['preparation_guide'],
-        is_public=data['is_public'],
-        user_id=current_user.id
-    )
-    db.session.add(new_recipe)
-    db.session.commit()
-
-    return jsonify({'message': 'New recipe added!'})
-
-
-@app.route('/api/recipe/<recipe_id>', methods=['PUT'])
-@token_required
-def update_recipe(current_user, recipe_id):
-    recipe = Recipe.query.filter_by(id=recipe_id, user_id=current_user.id).first()
-
-    if not recipe:
-        return jsonify({'message': 'No recipe found!'})
-
-    put_data = request.get_json()
-    recipe.name = put_data['name']
-    recipe.ingredients = put_data['ingredients']
-    recipe.picture = put_data['picture']
-    recipe.difficulty = put_data['difficulty']
-    recipe.preparation_time = put_data['preparation_time']
-    recipe.preparation_guide = put_data['preparation_guide']
-    recipe.is_public = put_data['is_public']
-    db.session.commit()
-
-    return jsonify({'message': 'Recipe updated!'})
-
-
-@app.route('/api/recipe/<recipe_id>', methods=['DELETE'])
-@token_required
-def delete_recipe(current_user, recipe_id):
-    recipe = Recipe.query.filter_by(id=recipe_id, user_id=current_user.id).first()
-
-    if not recipe:      
-        return jsonify({'message': 'No recipe found!'})
-
-    db.session.delete(recipe)
-    db.session.commit()
-
-    return jsonify({'message': 'Recipe deleted!'})
 
 
 @app.route('/api/login')
@@ -271,7 +265,8 @@ def login():
 
         return jsonify({'token': token.decode('UTF-8')})
 
-    return make_response('Verify your credentials!', 401, {'WWW-Authenticate': 'Basic realm="Verify your credentials!"'})
+    return make_response('Verify your credentials!', 401,
+                         {'WWW-Authenticate': 'Basic realm="Verify your credentials!"'})
 
 
 if __name__ == '__main__':
